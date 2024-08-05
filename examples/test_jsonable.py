@@ -1,7 +1,8 @@
 import datetime
 import json
-from fastapi.encoders import jsonable_encoder
+
 import pytest
+from fastapi.encoders import jsonable_encoder
 
 
 @pytest.fixture

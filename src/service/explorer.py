@@ -1,4 +1,4 @@
-import src.fake.explorer as data
+from src.fake import explorer as data
 from src.model.explorer import Explorer
 
 
