@@ -1,3 +1,5 @@
+from sqlite3 import IntegrityError
+from src.exceptions import Missing, Duplicate
 from src.data.init import curs
 from src.model.creature import Creature
 

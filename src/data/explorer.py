@@ -1,5 +1,8 @@
+from sqlite3 import IntegrityError
+
 from src.data.init import curs
 from src.model.explorer import Explorer
+from src.exceptions import Missing, Duplicate
 
 curs.execute("""CREATE TABLE IF NOT EXISTS explorer(
              name text primary key,
@@ -19,7 +22,10 @@ def get_one(name: str) -> Explorer:
     query = "SELECT * FROM explorer WHERE name = :name"
     params = {"name": name}
     curs.execute(query, params)
-    return row_to_model(curs.fetchone())
+    row = curs.fetchone()
+    if not row:
+        raise Missing(f"Explorer `{name}` not found")
+    return row_to_model(row)
 
 
 def get_all() -> list[Explorer]:
@@ -32,7 +38,10 @@ def create(explorer: Explorer) -> Explorer:
     query = """INSERT INTO explorer (name, country, description)
                VALUES (:name, :country, :description)"""
     params = model_to_dict(explorer)
-    _ = curs.execute(query, params)
+    try:
+        curs.execute(query, params)
+    except IntegrityError:
+        raise Duplicate(f"Creature `{explorer.name}` already existss")
     return get_one(explorer.name)
 
 
@@ -44,13 +53,17 @@ def modify(name: str, explorer: Explorer) -> Explorer:
                WHERE name=:name_orig"""
     params = model_to_dict(explorer)
     params["name_orig"] = explorer.name
-    _ = curs.execute(query, params)
+    curs.execute(query, params)
 
+    if curs.rowcount != 1:
+        raise Missing(f"Explorer `{name}` not found")
     return get_one(explorer.name)
 
 
 def delete(explorer: Explorer) -> bool:
     query = "DELETE FROM explorer WHERE name = :name"
     params = {"name": explorer.name}
-    res = curs.execute(query, params)
-    return bool(res)
+    curs.execute(query, params)
+    if curs.rowcount != 1:
+        raise Missing(f"Explorer `{explorer.name}` not found")
+    return True
